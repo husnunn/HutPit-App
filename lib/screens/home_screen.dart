@@ -3,15 +3,15 @@ import 'package:provider/provider.dart';
 
 import '../models/debt_model.dart';
 import '../providers/debt_provider.dart';
-import '../providers/expense_provider.dart';
+import '../providers/tabungan_provider.dart';
 import '../utils/formatters.dart';
 import '../widgets/debt_card.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/summary_card.dart';
 import 'debt_detail_screen.dart';
 import 'debt_list_screen.dart';
-import 'expense_list_screen.dart';
 import 'settings_screen.dart';
+import 'tabungan_list_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -26,7 +26,7 @@ class _HomeScreenState extends State<HomeScreen> {
   static const _pages = [
     _DashboardTab(),
     DebtListScreen(),
-    ExpenseListScreen(),
+    TabunganListScreen(),
     SettingsScreen(),
   ];
 
@@ -48,9 +48,9 @@ class _HomeScreenState extends State<HomeScreen> {
             label: 'Hutang',
           ),
           NavigationDestination(
-            icon: Icon(Icons.receipt_long_outlined),
-            selectedIcon: Icon(Icons.receipt_long),
-            label: 'Pengeluaran',
+            icon: Icon(Icons.savings_outlined),
+            selectedIcon: Icon(Icons.savings),
+            label: 'Tabungan',
           ),
           NavigationDestination(
             icon: Icon(Icons.settings_outlined),
@@ -69,7 +69,7 @@ class _DashboardTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final debtProvider = context.watch<DebtProvider>();
-    final expenseProvider = context.watch<ExpenseProvider>();
+    final tabunganProvider = context.watch<TabunganProvider>();
 
     final upcoming = debtProvider.debts
         .where((d) =>
@@ -101,10 +101,10 @@ class _DashboardTab extends StatelessWidget {
                   color: Colors.green,
                 ),
                 SummaryCard(
-                  title: 'Pengeluaran Bulan Ini',
-                  amount: expenseProvider.totalBulanIni,
-                  icon: Icons.receipt_long,
-                  color: Colors.blueGrey,
+                  title: 'Saldo Tabungan',
+                  amount: tabunganProvider.saldoTabungan,
+                  icon: Icons.savings,
+                  color: Colors.teal,
                 ),
                 SummaryCard(
                   title: 'Selisih (Piutang - Hutang)',

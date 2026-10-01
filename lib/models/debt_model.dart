@@ -50,6 +50,12 @@ class DebtModel {
   final DebtStatus status;
   final DateTime createdAt;
 
+  /// Total yang sudah dibayar. Untuk kategori [DebtCategory.installment],
+  /// ini adalah jumlah nominal cicilan yang sudah ditandai lunas — dipakai
+  /// agar total hutang/piutang aktif di ringkasan berkurang seiring cicilan
+  /// dibayar, tanpa harus menunggu seluruh cicilan lunas.
+  final double paidAmount;
+
   const DebtModel({
     required this.id,
     required this.personName,
@@ -63,6 +69,7 @@ class DebtModel {
     this.notes,
     this.status = DebtStatus.active,
     required this.createdAt,
+    this.paidAmount = 0,
   });
 
   factory DebtModel.fromMap(String id, Map<String, dynamic> map) {
@@ -91,6 +98,7 @@ class DebtModel {
       ),
       createdAt:
           (map['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      paidAmount: (map['paidAmount'] as num? ?? 0).toDouble(),
     );
   }
 
@@ -107,10 +115,11 @@ class DebtModel {
       'notes': notes,
       'status': status.name,
       'createdAt': Timestamp.fromDate(createdAt),
+      'paidAmount': paidAmount,
     };
   }
 
-  DebtModel copyWith({DebtStatus? status}) {
+  DebtModel copyWith({DebtStatus? status, double? paidAmount}) {
     return DebtModel(
       id: id,
       personName: personName,
@@ -124,6 +133,7 @@ class DebtModel {
       notes: notes,
       status: status ?? this.status,
       createdAt: createdAt,
+      paidAmount: paidAmount ?? this.paidAmount,
     );
   }
 }

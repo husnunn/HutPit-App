@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'providers/auth_provider.dart';
 import 'providers/debt_provider.dart';
-import 'providers/expense_provider.dart';
+import 'providers/tabungan_provider.dart';
 import 'screens/splash_screen.dart';
 import 'services/notification_service.dart';
 import 'utils/app_theme.dart';
@@ -37,10 +37,10 @@ class DebtTrackerApp extends StatelessWidget {
           update: (_, auth, debtProvider) =>
               debtProvider!..updateUser(auth.user?.uid),
         ),
-        ChangeNotifierProxyProvider<AuthProvider, ExpenseProvider>(
-          create: (_) => ExpenseProvider(),
-          update: (_, auth, expenseProvider) =>
-              expenseProvider!..updateUser(auth.user?.uid),
+        ChangeNotifierProxyProvider<AuthProvider, TabunganProvider>(
+          create: (_) => TabunganProvider(),
+          update: (_, auth, tabunganProvider) =>
+              tabunganProvider!..updateUser(auth.user?.uid),
         ),
       ],
       child: MaterialApp(

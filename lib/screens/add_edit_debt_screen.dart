@@ -60,36 +60,46 @@ class _AddEditDebtScreenState extends State<AddEditDebtScreen> {
     final provider = context.read<DebtProvider>();
     final amount = double.parse(_amountController.text.replaceAll(',', '.'));
 
-    if (_category == DebtCategory.oneTime) {
-      await provider.addOneTimeDebt(
-        personName: _nameController.text.trim(),
-        personContact: _contactController.text.trim().isEmpty
-            ? null
-            : _contactController.text.trim(),
-        type: _type,
-        amount: amount,
-        dueDate: _dueDate,
-        notes: _notesController.text.trim().isEmpty
-            ? null
-            : _notesController.text.trim(),
-      );
-    } else {
-      await provider.addInstallmentDebt(
-        personName: _nameController.text.trim(),
-        personContact: _contactController.text.trim().isEmpty
-            ? null
-            : _contactController.text.trim(),
-        type: _type,
-        totalAmount: amount,
-        installmentCount: int.parse(_installmentCountController.text),
-        firstDueDate: _dueDate,
-        notes: _notesController.text.trim().isEmpty
-            ? null
-            : _notesController.text.trim(),
-      );
-    }
+    try {
+      if (_category == DebtCategory.oneTime) {
+        await provider.addOneTimeDebt(
+          personName: _nameController.text.trim(),
+          personContact: _contactController.text.trim().isEmpty
+              ? null
+              : _contactController.text.trim(),
+          type: _type,
+          amount: amount,
+          dueDate: _dueDate,
+          notes: _notesController.text.trim().isEmpty
+              ? null
+              : _notesController.text.trim(),
+        );
+      } else {
+        await provider.addInstallmentDebt(
+          personName: _nameController.text.trim(),
+          personContact: _contactController.text.trim().isEmpty
+              ? null
+              : _contactController.text.trim(),
+          type: _type,
+          totalAmount: amount,
+          installmentCount: int.parse(_installmentCountController.text),
+          firstDueDate: _dueDate,
+          notes: _notesController.text.trim().isEmpty
+              ? null
+              : _notesController.text.trim(),
+        );
+      }
 
-    if (mounted) Navigator.pop(context);
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal menyimpan: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
   }
 
   @override

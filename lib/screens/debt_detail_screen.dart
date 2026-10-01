@@ -40,12 +40,16 @@ class DebtDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isInstallment = debt.category == DebtCategory.installment;
-    final isPaidOff = debt.status == DebtStatus.paidOff;
+    final liveDebt = context.watch<DebtProvider>().debts.firstWhere(
+          (d) => d.id == debt.id,
+          orElse: () => debt,
+        );
+    final isInstallment = liveDebt.category == DebtCategory.installment;
+    final isPaidOff = liveDebt.status == DebtStatus.paidOff;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(debt.personName),
+        title: Text(liveDebt.personName),
         actions: [
           IconButton(
             onPressed: () => _confirmDelete(context),
@@ -65,29 +69,43 @@ class DebtDetailScreen extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Chip(label: Text(debt.type.label)),
-                      Chip(label: Text(debt.category.label)),
-                      Chip(label: Text(debt.status.label)),
+                      Chip(label: Text(liveDebt.type.label)),
+                      Chip(label: Text(liveDebt.category.label)),
+                      isPaidOff
+                          ? Chip(
+                              avatar: const Icon(Icons.check_circle,
+                                  color: Colors.white, size: 18),
+                              label: Text(
+                                liveDebt.status.label,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              backgroundColor: Colors.green,
+                              side: BorderSide.none,
+                            )
+                          : Chip(label: Text(liveDebt.status.label)),
                     ],
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    formatCurrency(debt.totalAmount),
+                    formatCurrency(liveDebt.totalAmount),
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
                   ),
-                  if (debt.personContact != null) ...[
+                  if (liveDebt.personContact != null) ...[
                     const SizedBox(height: 8),
-                    Text('Kontak: ${debt.personContact}'),
+                    Text('Kontak: ${liveDebt.personContact}'),
                   ],
-                  if (!isInstallment && debt.dueDate != null) ...[
+                  if (!isInstallment && liveDebt.dueDate != null) ...[
                     const SizedBox(height: 8),
-                    Text('Jatuh tempo: ${formatDate(debt.dueDate!)}'),
+                    Text('Jatuh tempo: ${formatDate(liveDebt.dueDate!)}'),
                   ],
-                  if (debt.notes != null && debt.notes!.isNotEmpty) ...[
+                  if (liveDebt.notes != null && liveDebt.notes!.isNotEmpty) ...[
                     const SizedBox(height: 8),
-                    Text('Catatan: ${debt.notes}'),
+                    Text('Catatan: ${liveDebt.notes}'),
                   ],
                 ],
               ),
@@ -115,7 +133,12 @@ class DebtDetailScreen extends StatelessWidget {
                               onTogglePaid: (paid) => context
                                   .read<DebtProvider>()
                                   .markInstallmentPaid(
-                                      debt.id, inst.id, paid),
+                                    debtId: debt.id,
+                                    installmentId: inst.id,
+                                    isPaid: paid,
+                                    allInstallments: installments,
+                                    currentDebtStatus: liveDebt.status,
+                                  ),
                             ))
                         .toList(),
                   ),
@@ -125,7 +148,7 @@ class DebtDetailScreen extends StatelessWidget {
           ] else if (!isPaidOff) ...[
             FilledButton.icon(
               onPressed: () =>
-                  context.read<DebtProvider>().markDebtPaidOff(debt.id),
+                  context.read<DebtProvider>().markDebtPaidOff(liveDebt.id),
               icon: const Icon(Icons.check_circle_outline),
               label: const Text('Tandai Lunas'),
               style: FilledButton.styleFrom(

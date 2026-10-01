@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../models/expense_model.dart';
-import '../providers/expense_provider.dart';
+import '../models/tabungan_model.dart';
+import '../providers/tabungan_provider.dart';
 import '../utils/formatters.dart';
 
-class AddExpenseScreen extends StatefulWidget {
-  const AddExpenseScreen({super.key});
+class AddTabunganScreen extends StatefulWidget {
+  const AddTabunganScreen({super.key});
 
   @override
-  State<AddExpenseScreen> createState() => _AddExpenseScreenState();
+  State<AddTabunganScreen> createState() => _AddTabunganScreenState();
 }
 
-class _AddExpenseScreenState extends State<AddExpenseScreen> {
+class _AddTabunganScreenState extends State<AddTabunganScreen> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _notesController = TextEditingController();
 
-  ExpenseCategory _category = ExpenseCategory.makanan;
+  TabunganType _type = TabunganType.setor;
   DateTime _date = DateTime.now();
   bool _isSubmitting = false;
 
@@ -42,27 +42,59 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isSubmitting = true);
 
-    await context.read<ExpenseProvider>().addExpense(
-          amount: double.parse(_amountController.text.replaceAll(',', '.')),
-          category: _category,
-          date: _date,
-          notes: _notesController.text.trim().isEmpty
-              ? null
-              : _notesController.text.trim(),
-        );
+    try {
+      await context.read<TabunganProvider>().addTabungan(
+            type: _type,
+            amount: double.parse(_amountController.text.replaceAll(',', '.')),
+            date: _date,
+            notes: _notesController.text.trim().isEmpty
+                ? null
+                : _notesController.text.trim(),
+          );
 
-    if (mounted) Navigator.pop(context);
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal menyimpan: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final saldo = context.watch<TabunganProvider>().saldoTabungan;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Tambah Pengeluaran')),
+      appBar: AppBar(title: const Text('Tambah Tabungan')),
       body: Form(
         key: _formKey,
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            SegmentedButton<TabunganType>(
+              segments: const [
+                ButtonSegment(
+                  value: TabunganType.setor,
+                  label: Text('Setor'),
+                  icon: Icon(Icons.arrow_downward),
+                ),
+                ButtonSegment(
+                  value: TabunganType.tarik,
+                  label: Text('Tarik'),
+                  icon: Icon(Icons.arrow_upward),
+                ),
+              ],
+              selected: {_type},
+              onSelectionChanged: (s) {
+                setState(() => _type = s.first);
+                _formKey.currentState?.validate();
+              },
+            ),
+            const SizedBox(height: 16),
             TextFormField(
               controller: _amountController,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -75,22 +107,11 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 if (v == null || v.trim().isEmpty) return 'Wajib diisi';
                 final n = double.tryParse(v.replaceAll(',', '.'));
                 if (n == null || n <= 0) return 'Jumlah tidak valid';
+                if (_type == TabunganType.tarik && n > saldo) {
+                  return 'Saldo tidak cukup';
+                }
                 return null;
               },
-            ),
-            const SizedBox(height: 16),
-            Text('Kategori', style: Theme.of(context).textTheme.titleSmall),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: ExpenseCategory.values.map((c) {
-                return ChoiceChip(
-                  label: Text(c.label),
-                  selected: _category == c,
-                  onSelected: (_) => setState(() => _category = c),
-                );
-              }).toList(),
             ),
             const SizedBox(height: 16),
             ListTile(

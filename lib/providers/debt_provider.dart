@@ -47,11 +47,11 @@ class DebtProvider extends ChangeNotifier {
 
   double get totalHutangAktif => hutangList
       .where((d) => d.status != DebtStatus.paidOff)
-      .fold(0, (sum, d) => sum + d.totalAmount);
+      .fold(0, (sum, d) => sum + (d.totalAmount - d.paidAmount));
 
   double get totalPiutangAktif => piutangList
       .where((d) => d.status != DebtStatus.paidOff)
-      .fold(0, (sum, d) => sum + d.totalAmount);
+      .fold(0, (sum, d) => sum + (d.totalAmount - d.paidAmount));
 
   /// Tambah hutang/piutang sekali bayar. Notifikasi H-1 & hari-H otomatis
   /// dijadwalkan berdasarkan [dueDate].
@@ -78,12 +78,14 @@ class DebtProvider extends ChangeNotifier {
     );
     final debtId = await _firestore.addDebt(_uid!, debt);
 
-    await _notifications.scheduleDueReminder(
+    // Jadwalkan notifikasi di background: jangan tunda penutupan layar
+    // simpan hanya karena menunggu panggilan plugin notifikasi selesai.
+    unawaited(_notifications.scheduleDueReminder(
       key: debtId,
       title: type == DebtType.hutang ? 'Hutang jatuh tempo' : 'Piutang jatuh tempo',
       body: '$personName - Rp ${amount.toStringAsFixed(0)}',
       dueDate: dueDate,
-    );
+    ).catchError((_) {}));
   }
 
   /// Tambah hutang/piutang dengan cicilan. Total dibagi rata ke
@@ -133,8 +135,11 @@ class DebtProvider extends ChangeNotifier {
     }
     await _firestore.addInstallments(_uid!, debtId, installments);
 
-    for (final inst in installments) {
-      await _notifications.scheduleDueReminder(
+    // Jadwalkan semua notifikasi cicilan secara paralel di background,
+    // bukan satu per satu secara berurutan, supaya layar simpan tidak
+    // menunggu lama terutama untuk jumlah cicilan yang besar.
+    unawaited(Future.wait(installments.map((inst) {
+      return _notifications.scheduleDueReminder(
         key: '$debtId-${inst.installmentNumber}',
         title: type == DebtType.hutang
             ? 'Cicilan hutang jatuh tempo'
@@ -142,8 +147,8 @@ class DebtProvider extends ChangeNotifier {
         body:
             '$personName - Cicilan ke-${inst.installmentNumber} - Rp ${inst.amount.toStringAsFixed(0)}',
         dueDate: inst.dueDate,
-      );
-    }
+      ).catchError((_) {});
+    })));
   }
 
   Stream<List<InstallmentModel>> watchInstallments(String debtId) {
@@ -151,16 +156,41 @@ class DebtProvider extends ChangeNotifier {
     return _firestore.watchInstallments(_uid!, debtId);
   }
 
-  Future<void> markInstallmentPaid(
-    String debtId,
-    String installmentId,
-    bool isPaid,
-  ) async {
+  /// Menandai sebuah cicilan lunas/belum, lalu otomatis menyesuaikan status
+  /// hutang induk menjadi [DebtStatus.paidOff] bila [allInstallments] semua
+  /// sudah lunas, atau kembali ke [DebtStatus.active] bila sebelumnya
+  /// auto-lunas tapi ada cicilan yang di-uncheck lagi.
+  Future<void> markInstallmentPaid({
+    required String debtId,
+    required String installmentId,
+    required bool isPaid,
+    required List<InstallmentModel> allInstallments,
+    required DebtStatus currentDebtStatus,
+  }) async {
     if (_uid == null) return;
     await _firestore.markInstallmentPaid(
         _uid!, debtId, installmentId, isPaid);
     if (isPaid) {
       await _notifications.cancelReminder('$debtId-$installmentId');
+    }
+
+    final allPaidAfterToggle = allInstallments.every(
+      (inst) => inst.id == installmentId ? isPaid : inst.isPaid,
+    );
+    final paidAmountAfterToggle = allInstallments.fold<double>(
+      0,
+      (sum, inst) =>
+          sum + ((inst.id == installmentId ? isPaid : inst.isPaid)
+              ? inst.amount
+              : 0),
+    );
+    await _firestore.updateDebtPaidAmount(_uid!, debtId, paidAmountAfterToggle);
+
+    if (allPaidAfterToggle && currentDebtStatus != DebtStatus.paidOff) {
+      await _firestore.updateDebtStatus(_uid!, debtId, DebtStatus.paidOff);
+      await _notifications.cancelReminder(debtId);
+    } else if (!allPaidAfterToggle && currentDebtStatus == DebtStatus.paidOff) {
+      await _firestore.updateDebtStatus(_uid!, debtId, DebtStatus.active);
     }
   }
 

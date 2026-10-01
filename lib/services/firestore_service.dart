@@ -1,13 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../models/debt_model.dart';
-import '../models/expense_model.dart';
 import '../models/installment_model.dart';
+import '../models/tabungan_model.dart';
 
 /// Semua data disimpan per-user di:
 ///   users/{uid}/debts/{debtId}
 ///   users/{uid}/debts/{debtId}/installments/{installmentId}
-///   users/{uid}/expenses/{expenseId}
+///   users/{uid}/tabungan/{tabunganId}
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
@@ -20,8 +20,8 @@ class FirestoreService {
   ) =>
       _debts(uid).doc(debtId).collection('installments');
 
-  CollectionReference<Map<String, dynamic>> _expenses(String uid) =>
-      _db.collection('users').doc(uid).collection('expenses');
+  CollectionReference<Map<String, dynamic>> _tabungan(String uid) =>
+      _db.collection('users').doc(uid).collection('tabungan');
 
   // ---------------- Debts (hutang & piutang) ----------------
 
@@ -44,6 +44,14 @@ class FirestoreService {
     DebtStatus status,
   ) {
     return _debts(uid).doc(debtId).update({'status': status.name});
+  }
+
+  Future<void> updateDebtPaidAmount(
+    String uid,
+    String debtId,
+    double paidAmount,
+  ) {
+    return _debts(uid).doc(debtId).update({'paidAmount': paidAmount});
   }
 
   Future<void> deleteDebt(String uid, String debtId) async {
@@ -92,22 +100,22 @@ class FirestoreService {
     });
   }
 
-  // ---------------- Expenses (pengeluaran) ----------------
+  // ---------------- Tabungan ----------------
 
-  Stream<List<ExpenseModel>> watchExpenses(String uid) {
-    return _expenses(uid)
+  Stream<List<TabunganModel>> watchTabungan(String uid) {
+    return _tabungan(uid)
         .orderBy('date', descending: true)
         .snapshots()
         .map((snap) => snap.docs
-            .map((d) => ExpenseModel.fromMap(d.id, d.data()))
+            .map((d) => TabunganModel.fromMap(d.id, d.data()))
             .toList());
   }
 
-  Future<void> addExpense(String uid, ExpenseModel expense) {
-    return _expenses(uid).add(expense.toMap());
+  Future<void> addTabungan(String uid, TabunganModel item) {
+    return _tabungan(uid).add(item.toMap());
   }
 
-  Future<void> deleteExpense(String uid, String expenseId) {
-    return _expenses(uid).doc(expenseId).delete();
+  Future<void> deleteTabungan(String uid, String id) {
+    return _tabungan(uid).doc(id).delete();
   }
 }

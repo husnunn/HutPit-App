@@ -46,7 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Kelola hutang, piutang, dan pengeluaranmu di satu tempat',
+                'Kelola hutang, piutang, dan tabunganmu di satu tempat',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),

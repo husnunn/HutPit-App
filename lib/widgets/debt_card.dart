@@ -50,23 +50,48 @@ class DebtCard extends StatelessWidget {
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         subtitle: Text(
-          isPaidOff
-              ? 'Lunas'
-              : isInstallment
-                  ? 'Cicilan ${debt.installmentCount ?? '-'}x'
-                  : subtitleDate ?? debt.category.label,
+          isInstallment
+              ? 'Cicilan ${debt.installmentCount ?? '-'}x'
+              : subtitleDate ?? debt.category.label,
           style: TextStyle(color: dueColor),
         ),
-        trailing: Text(
-          formatCurrency(debt.totalAmount),
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: isPaidOff
-                ? Theme.of(context).colorScheme.outline
-                : debt.type == DebtType.hutang
-                    ? Colors.red
-                    : Colors.green,
-          ),
+        trailing: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              formatCurrency(debt.totalAmount),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: isPaidOff
+                    ? Theme.of(context).colorScheme.outline
+                    : debt.type == DebtType.hutang
+                        ? Colors.red
+                        : Colors.green,
+              ),
+            ),
+            if (isPaidOff) ...[
+              const SizedBox(height: 4),
+              Chip(
+                visualDensity: VisualDensity.compact,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                backgroundColor: Colors.green.withValues(alpha: 0.15),
+                side: BorderSide.none,
+                avatar: const Icon(Icons.check_circle,
+                    size: 14, color: Colors.green),
+                label: const Text(
+                  'Lunas',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.green,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                padding: EdgeInsets.zero,
+                labelPadding: const EdgeInsets.only(right: 4),
+              ),
+            ],
+          ],
         ),
       ),
     );

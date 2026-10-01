@@ -1,22 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../models/expense_model.dart';
-import '../providers/expense_provider.dart';
+import '../models/tabungan_model.dart';
+import '../providers/tabungan_provider.dart';
 import '../utils/formatters.dart';
 import '../widgets/empty_state.dart';
-import 'add_expense_screen.dart';
+import 'add_tabungan_screen.dart';
 
-class ExpenseListScreen extends StatelessWidget {
-  const ExpenseListScreen({super.key});
+class TabunganListScreen extends StatelessWidget {
+  const TabunganListScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<ExpenseProvider>();
-    final expenses = provider.expenses;
+    final provider = context.watch<TabunganProvider>();
+    final items = provider.tabunganList;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Pengeluaran')),
+      appBar: AppBar(title: const Text('Tabungan')),
       body: Column(
         children: [
           Padding(
@@ -28,9 +28,9 @@ class ExpenseListScreen extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Total bulan ini'),
+                    const Text('Saldo Tabungan'),
                     Text(
-                      formatCurrency(provider.totalBulanIni),
+                      formatCurrency(provider.saldoTabungan),
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 18,
@@ -42,31 +42,43 @@ class ExpenseListScreen extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: expenses.isEmpty
+            child: items.isEmpty
                 ? const EmptyState(
-                    icon: Icons.receipt_long_outlined,
-                    message: 'Belum ada pengeluaran tercatat.',
+                    icon: Icons.savings_outlined,
+                    message: 'Belum ada catatan tabungan.',
                   )
                 : ListView.builder(
                     padding: const EdgeInsets.fromLTRB(12, 0, 12, 88),
-                    itemCount: expenses.length,
+                    itemCount: items.length,
                     itemBuilder: (context, i) {
-                      final ExpenseModel e = expenses[i];
+                      final TabunganModel t = items[i];
+                      final isSetor = t.type == TabunganType.setor;
                       return Card(
                         child: ListTile(
                           leading: CircleAvatar(
-                            child: Text(e.category.label.substring(0, 1)),
+                            backgroundColor: isSetor
+                                ? Colors.green.withValues(alpha: 0.15)
+                                : Colors.red.withValues(alpha: 0.15),
+                            child: Icon(
+                              isSetor
+                                  ? Icons.arrow_downward
+                                  : Icons.arrow_upward,
+                              color: isSetor ? Colors.green : Colors.red,
+                            ),
                           ),
-                          title: Text(e.category.label),
+                          title: Text(t.type.label),
                           subtitle: Text(
-                            '${formatDate(e.date)}'
-                            '${e.notes != null && e.notes!.isNotEmpty ? ' - ${e.notes}' : ''}',
+                            '${formatDate(t.date)}'
+                            '${t.notes != null && t.notes!.isNotEmpty ? ' - ${t.notes}' : ''}',
                           ),
                           trailing: Text(
-                            formatCurrency(e.amount),
-                            style: const TextStyle(fontWeight: FontWeight.bold),
+                            '${isSetor ? '+' : '-'}${formatCurrency(t.amount)}',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: isSetor ? Colors.green : Colors.red,
+                            ),
                           ),
-                          onLongPress: () => _confirmDelete(context, e),
+                          onLongPress: () => _confirmDelete(context, t),
                         ),
                       );
                     },
@@ -77,7 +89,7 @@ class ExpenseListScreen extends StatelessWidget {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const AddExpenseScreen()),
+          MaterialPageRoute(builder: (_) => const AddTabunganScreen()),
         ),
         icon: const Icon(Icons.add),
         label: const Text('Tambah'),
@@ -85,12 +97,12 @@ class ExpenseListScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _confirmDelete(BuildContext context, ExpenseModel e) async {
+  Future<void> _confirmDelete(BuildContext context, TabunganModel t) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Hapus pengeluaran?'),
-        content: Text('${e.category.label} - ${formatCurrency(e.amount)}'),
+        title: const Text('Hapus catatan tabungan?'),
+        content: Text('${t.type.label} - ${formatCurrency(t.amount)}'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -104,7 +116,7 @@ class ExpenseListScreen extends StatelessWidget {
       ),
     );
     if (confirmed == true && context.mounted) {
-      await context.read<ExpenseProvider>().deleteExpense(e.id);
+      await context.read<TabunganProvider>().deleteTabungan(t.id);
     }
   }
 }
