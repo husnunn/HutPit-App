@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>912790501929-7leosh6fbuedq387vrtgnhnbr63g4clb.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.912790501929-7leosh6fbuedq387vrtgnhnbr63g4clb</string>
+	<key>API_KEY</key>
+	<string>AIzaSyALHQgZ3HCKu_4GpbCwFsgqurVyUDZQknU</string>
+	<key>GCM_SENDER_ID</key>
+	<string>912790501929</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>id.gritech.debtTrackerApp</string>
+	<key>PROJECT_ID</key>
+	<string>debt-app-36b1f</string>
+	<key>STORAGE_BUCKET</key>
+	<string>debt-app-36b1f.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:912790501929:ios:4b164a526c9fed9a42ba38</string>
+</dict>
+</plist>
