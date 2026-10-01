@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "912790501929-5lftgm75ilf1ctr647fvrujgptjcir9e.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "id.gritech.debt_tracker_app",
+            "certificate_hash": "76bff37a567a2778ba01bdd5bf99b0b20e265d13"
+          }
+        },
+        {
           "client_id": "912790501929-cok39triffeumrcfdl7ag83m5t9hbf3b.apps.googleusercontent.com",
           "client_type": 3
         }

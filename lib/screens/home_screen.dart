@@ -86,13 +86,7 @@ class _DashboardTab extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            GridView.count(
-              crossAxisCount: 2,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 1.5,
+            _SummaryGrid(
               children: [
                 SummaryCard(
                   title: 'Total Hutang',
@@ -147,6 +141,37 @@ class _DashboardTab extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _SummaryGrid extends StatelessWidget {
+  final List<Widget> children;
+
+  const _SummaryGrid({required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        for (var i = 0; i < children.length; i += 2) ...[
+          if (i > 0) const SizedBox(height: 12),
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(child: children[i]),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: i + 1 < children.length
+                      ? children[i + 1]
+                      : const SizedBox.shrink(),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

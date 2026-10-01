@@ -53,9 +53,9 @@ class NotificationService {
             AndroidFlutterLocalNotificationsPlugin>()
         ?.requestExactAlarmsPermission();
     await _plugin
-        .resolvePlatformSpecificImplementation<
-            DarwinFlutterLocalNotificationsPlugin>()
-        ?.requestPermissions(alert: true, badge: true, sound: true);
+    .resolvePlatformSpecificImplementation<
+        IOSFlutterLocalNotificationsPlugin>()
+    ?.requestPermissions(alert: true, badge: true, sound: true);
   }
 
   /// ID notifikasi dibuat deterministik dari sebuah key (mis. debtId atau
